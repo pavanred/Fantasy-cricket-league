@@ -1,0 +1,284 @@
+
+CREATE TABLE IF NOT EXISTS `Groups` (
+  `Group_ID` int(11) NOT NULL auto_increment,
+  `Group_Name` varchar(225) NOT NULL,
+  PRIMARY KEY  (`Group_ID`)
+) ENGINE=Innodb  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
+
+INSERT INTO `Groups` (`Group_ID`, `Group_Name`) VALUES
+(1, 'Standard User');
+
+CREATE TABLE IF NOT EXISTS `Users` (
+  `User_ID` int(11) NOT NULL auto_increment,
+  `Username` varchar(150) NOT NULL,
+  `Username_Clean` varchar(150) NOT NULL,
+  `Password` varchar(225) NOT NULL,
+  `Email` varchar(150) NOT NULL,
+  `ActivationToken` varchar(225) NOT NULL,
+  `LastActivationRequest` int(11) NOT NULL,
+  `LostPasswordRequest` int(1) NOT NULL default '0',
+  `Active` int(1) NOT NULL,
+  `Group_ID` int(11) NOT NULL,
+  `SignUpDate` int(11) NOT NULL,
+  `LastSignIn` int(11) NOT NULL,
+  PRIMARY KEY  (`User_ID`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+
+CREATE TABLE IF NOT EXISTS `TournamentType_Master` (
+  `trtype_id` int(11) NOT NULL auto_increment,
+  `trtype_Name` varchar(150) NOT NULL,  
+   PRIMARY KEY  (`trtype_id`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `TournamentStatus_Master` (
+  `trstatus_id` int(11) NOT NULL auto_increment,
+  `trstatus_Description` varchar(150) NOT NULL,  
+   PRIMARY KEY  (`trstatus_id`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `TournamentStage_Master` (
+  `trstg_id` int(11) NOT NULL auto_increment,
+  `trstg_Description` varchar(150) NOT NULL,  
+   PRIMARY KEY  (`trstg_id`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `PlayerClassification_Master` (
+  `plcl_id` int(11) NOT NULL auto_increment,
+  `plcl_Description` varchar(150) NOT NULL,  
+   PRIMARY KEY  (`plcl_id`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `TransferType_Master` (
+  `tftype_id` int(11) NOT NULL auto_increment,
+  `tftype_Description` varchar(150) NOT NULL,  
+   PRIMARY KEY  (`tftype_id`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `Dismissal_Master` (
+  `dm_id` int(11) NOT NULL auto_increment,
+  `dm_Description` varchar(150) NOT NULL,  
+   PRIMARY KEY  (`dm_id`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+
+
+CREATE TABLE IF NOT EXISTS `Tournament` (
+  `trn_id` int(11) NOT NULL auto_increment,
+  `trn_Name` varchar(150) NOT NULL,
+  `trn_trtype_id` int(11) NOT NULL,
+  `trn_trstg_id` int(11) NOT NULL,
+  `trn_trstatus_id` int(11) NOT NULL,
+  `trn_StartDate` datetime ,
+  `trn_EndDate` datetime ,
+   FOREIGN KEY (`trn_trtype_id`) REFERENCES `TournamentType_Master`(`trtype_id`),
+   FOREIGN KEY (`trn_trstg_id`) REFERENCES `TournamentStage_Master`(`trstg_id`),
+   FOREIGN KEY (`trn_trstatus_id`) REFERENCES `TournamentStatus_Master`(`trstatus_id`),
+   PRIMARY KEY  (`trn_id`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `League` (
+  `lg_id` int(11) NOT NULL auto_increment,
+  `lg_Name` varchar(150) NOT NULL,
+  `lg_Trn_id` int(11) NOT NULL,
+  `lg_UserId` int(11) NOT NULL,
+  `lg_Points` int(11) NOT NULL DEFAULT 0,
+  `lg_CreateDate` datetime ,
+   FOREIGN KEY (`lg_UserId`) REFERENCES `Users`(User_Id),
+   FOREIGN KEY (`lg_Trn_id`) REFERENCES `Tournament`(`trn_id`),
+   PRIMARY KEY (`lg_id`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `Team` (
+  `tm_id` int(11) NOT NULL auto_increment,
+  `tm_Name` varchar(150) NOT NULL,
+  `tm_UserId` int(11) NOT NULL,
+  `tm_Trn_id` int(11) NOT NULL,
+  `tm_lg_id` int(11) NOT NULL,
+  `tm_SubsLeft` int(11) NOT NULL,
+  `tm_CreateDate` datetime ,
+  `tm_ModifiedDate` datetime ,
+   FOREIGN KEY (`tm_UserId`) REFERENCES `Users`(`User_Id`),
+   FOREIGN KEY (`tm_Trn_id`) REFERENCES `Tournament`(`trn_id`),
+   FOREIGN KEY (`tm_lg_id`) REFERENCES `League`(`lg_Id`),
+   PRIMARY KEY  (`tm_id`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `TeamStats` (
+  `tms_id` int(11) NOT NULL auto_increment,
+  `tms_tm_id` int(11) NOT NULL,
+  `tms_Played` int(11) NOT NULL DEFAULT 0,
+  `tms_Won` int(11) NOT NULL DEFAULT 0,
+  `tms_Lost` int(11) NOT NULL DEFAULT 0,
+  `tms_Drawn` int(11) NOT NULL DEFAULT 0,
+  `tms_Points` int(11) NOT NULL DEFAULT 0,  
+   FOREIGN KEY (`tms_tm_id`) REFERENCES `Team`(`tm_id`),
+   PRIMARY KEY  (`tms_id`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `Player` (
+  `pl_id` int(11) NOT NULL auto_increment,
+  `pl_Name` varchar(250) NOT NULL,
+  `pl_PlaysFor` int(11) NOT NULL,
+  `pl_Points` int(11) NOT NULL DEFAULT 0,
+  `pl_Value` decimal(11,2) NOT NULL DEFAULT 0,
+  `pl_plcl_id` int(11) NOT NULL DEFAULT 0, 
+   FOREIGN KEY (`pl_PlaysFor`) REFERENCES `Team`(`tm_id`),
+   FOREIGN KEY (`pl_plcl_id`) REFERENCES `PlayerClassification_Master`(`plcl_id`),
+   PRIMARY KEY  (`pl_id`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `TeamComposition` (
+  `tmcp_id` int(11) NOT NULL auto_increment,
+  `tmcp_tm_id` int(11) NOT NULL,
+  `tmcp_Capt` int(11) NOT NULL,
+  `tmcp_P2` int(11) NOT NULL,
+  `tmcp_P3` int(11) NOT NULL,
+  `tmcp_P4` int(11) NOT NULL,
+  `tmcp_P5` int(11) NOT NULL,
+  `tmcp_P6` int(11) NOT NULL,
+  `tmcp_P7` int(11) NOT NULL,
+  `tmcp_P8` int(11) NOT NULL,
+  `tmcp_P9` int(11) NOT NULL,
+  `tmcp_P10` int(11) NOT NULL,
+  `tmcp_P11` int(11) NOT NULL,
+   FOREIGN KEY (`tmcp_Capt`) REFERENCES `Player`(`pl_id`),
+   FOREIGN KEY (`tmcp_P2`) REFERENCES `Player`(`pl_id`),
+   FOREIGN KEY (`tmcp_P3`) REFERENCES `Player`(`pl_id`),
+   FOREIGN KEY (`tmcp_P4`) REFERENCES `Player`(`pl_id`),
+   FOREIGN KEY (`tmcp_P5`) REFERENCES `Player`(`pl_id`),
+   FOREIGN KEY (`tmcp_P6`) REFERENCES `Player`(`pl_id`),
+   FOREIGN KEY (`tmcp_P7`) REFERENCES `Player`(`pl_id`),
+   FOREIGN KEY (`tmcp_P8`) REFERENCES `Player`(`pl_id`),
+   FOREIGN KEY (`tmcp_P9`) REFERENCES `Player`(`pl_id`),
+   FOREIGN KEY (`tmcp_P10`) REFERENCES `Player`(`pl_id`),
+   FOREIGN KEY (`tmcp_P11`) REFERENCES `Player`(`pl_id`),
+   FOREIGN KEY (`tmcp_tm_id`) REFERENCES `Team`(`tm_id`),
+   PRIMARY KEY  (`tmcp_id`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `PlayerStats` (
+  `pls_id` int(11) NOT NULL auto_increment,
+  `pls_pl_id` int(11) NOT NULL,
+  `pls_runs` int(11) NOT NULL DEFAULT 0,
+  `pls_wickets` decimal(11,2) NOT NULL DEFAULT 0,
+  `pls_Catches` int(11) NOT NULL DEFAULT 0, 
+  `pls_BatAvg` decimal(11,2) NOT NULL DEFAULT 0,
+  `pls_BowlAvg` decimal(11,2) NOT NULL DEFAULT 0,
+  `pls_EconRate` decimal(11,2) NOT NULL DEFAULT 0,
+  `pls_StrikeRate` decimal(11,2) NOT NULL DEFAULT 0,
+   FOREIGN KEY (`pls_pl_id`) REFERENCES `Player`(`pl_id`),
+   PRIMARY KEY  (`pls_id`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `Transfer` (
+  `tf_id` int(11) NOT NULL auto_increment,
+  `tf_tm_id` int(11) NOT NULL,
+  `tf_Trn_id` int(11) NOT NULL,
+  `tf_lg_id` int(11) NOT NULL,
+  `tf_tftype_id` int(11) NOT NULL,
+  `tf_PlayerIn` int(11),
+  `tf_PlayerOut` int(11),
+  `tf_InValue` decimal(11,2) NOT NULL DEFAULT 0,
+  `tf_OutValue` decimal(11,2) NOT NULL DEFAULT 0,   
+  `tf_Date` datetime NOT NULL,   
+   FOREIGN KEY (`tf_Trn_id`) REFERENCES `Tournament`(`trn_id`),
+   FOREIGN KEY (`tf_lg_id`) REFERENCES `League`(`lg_Id`),
+   FOREIGN KEY (`tf_tm_id`) REFERENCES `Team`(`tm_id`),
+   FOREIGN KEY (`tf_tftype_id`) REFERENCES `TransferType_Master`(`tftype_id`),
+   FOREIGN KEY (`tf_PlayerIn`) REFERENCES `Player`(`pl_id`),
+   FOREIGN KEY (`tf_PlayerOut`) REFERENCES `Player`(`pl_id`),
+   PRIMARY KEY  (`tf_id`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `Match` (
+  `mt_id` int(11) NOT NULL auto_increment,
+  `mt_team1` int(11) NOT NULL,
+  `mt_team2` int(11) NOT NULL,
+  `mt_Trn_id` int(11) NOT NULL,
+  `mt_lg_id` int(11) NOT NULL,  
+  `mt_Date` datetime NOT NULL,   
+   FOREIGN KEY (`mt_Trn_id`) REFERENCES `Tournament`(`trn_id`),
+   FOREIGN KEY (`mt_lg_id`) REFERENCES `League`(`lg_Id`),
+   FOREIGN KEY (`mt_team1`) REFERENCES `Team`(`tm_id`),
+   FOREIGN KEY (`mt_team2`) REFERENCES `Team`(`tm_id`),   
+   PRIMARY KEY  (`mt_id`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `MatchStats` (
+  `mts_id` int(11) NOT NULL auto_increment,
+  `mts_mt_id` int(11) NOT NULL,
+  `mts_Winner` int(11) NOT NULL,
+  `mts_Loser` int(11) NOT NULL,
+  `mts_Draw` int(11) NOT NULL DEFAULT 0,  
+  `mts_Points` int(11) NOT NULL DEFAULT 0, 
+   FOREIGN KEY (`mts_mt_id`) REFERENCES `Match`(`mt_id`),
+   FOREIGN KEY (`mts_Winner`) REFERENCES `Team`(`tm_id`),
+   FOREIGN KEY (`mts_Loser`) REFERENCES `Team`(`tm_id`),   
+   PRIMARY KEY  (`mts_id`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `Runs` (
+  `r_id` int(11) NOT NULL auto_increment,
+  `r_Batsman` int(11) NOT NULL,
+  `r_Bowler` int(11) NOT NULL,
+  `r_mt_id` int(11) NOT NULL,
+  `r_runs` int(11) DEFAULT 0,
+  `r_balls` int(11) DEFAULT 0,
+   FOREIGN KEY (`r_mt_id`) REFERENCES `Match`(`mt_id`),
+   FOREIGN KEY (`r_Batsman`) REFERENCES `Player`(`pl_id`),
+   FOREIGN KEY (`r_Bowler`) REFERENCES `Player`(`pl_id`),
+   PRIMARY KEY  (`r_id`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `Wickets` (
+  `w_id` int(11) NOT NULL auto_increment,
+  `w_Batsman` int(11) NOT NULL,
+  `w_Bowler` int(11) NOT NULL,
+  `w_mt_id` int(11) NOT NULL,
+  `w_dm_id` int(11),
+   FOREIGN KEY (`w_mt_id`) REFERENCES `Match`(`mt_id`),
+   FOREIGN KEY (`w_Batsman`) REFERENCES `Player`(`pl_id`),
+   FOREIGN KEY (`w_Bowler`) REFERENCES `Player`(`pl_id`),
+   FOREIGN KEY (`w_dm_id`) REFERENCES `Dismissal_Master`(`dm_id`),
+   PRIMARY KEY  (`w_id`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `Catches` (
+  `c_id` int(11) NOT NULL auto_increment,
+  `c_Fielder` int(11) NOT NULL,
+  `c_mt_id` int(11) NOT NULL,
+   FOREIGN KEY (`c_mt_id`) REFERENCES `Match`(`mt_id`),
+   FOREIGN KEY (`c_Fielder`) REFERENCES `Player`(`pl_id`),
+   PRIMARY KEY  (`c_id`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+
+insert into `TournamentType_Master` (`trType_Name`) values ('Test');
+insert into `TournamentType_Master` (`trType_Name`) values ('ODI');
+insert into `TournamentType_Master` (`trType_Name`) values ('20-20');
+
+insert into `TournamentStatus_Master` (`trstatus_Description`) values ('Yet To begin');
+insert into `TournamentStatus_Master` (`trstatus_Description`) values ('In Progress');
+insert into `TournamentStatus_Master` (`trstatus_Description`) values ('Completed');
+
+insert into `TournamentStage_Master` (`trstg_Description`) values ('Knock Out');
+insert into `TournamentStage_Master` (`trstg_Description`) values ('Finals');
+insert into `TournamentStage_Master` (`trstg_Description`) values ('Semi Finals');
+insert into `TournamentStage_Master` (`trstg_Description`) values ('Quarter Finals');
+insert into `TournamentStage_Master` (`trstg_Description`) values ('League matches');
+
+insert into `PlayerClassification_Master` (`plcl_Description`) values ('Batsman');
+insert into `PlayerClassification_Master` (`plcl_Description`) values ('Bowler');
+insert into `PlayerClassification_Master` (`plcl_Description`) values ('All rounder');
+insert into `PlayerClassification_Master` (`plcl_Description`) values ('Keeper');
+
+insert into `TransferType_Master` (`tftype_Description`) values ('Purchase');
+insert into `TransferType_Master` (`tftype_Description`) values ('Sale');
+insert into `TransferType_Master` (`tftype_Description`) values ('Substitution');
+
+insert into `Dismissal_Master` (`dm_Description`) values ('Caught');
+insert into `Dismissal_Master` (`dm_Description`) values ('Bowled');
+insert into `Dismissal_Master` (`dm_Description`) values ('Run out');
+insert into `Dismissal_Master` (`dm_Description`) values ('Stumped');
+insert into `Dismissal_Master` (`dm_Description`) values ('Caught Keeper');
